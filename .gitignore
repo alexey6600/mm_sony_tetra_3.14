@@ -205,3 +205,5 @@ drivers/misc/vc04_services/vmcs_sm/vmcs_sm.c
 drivers/misc/vc04_services/vmcs_sm/vc_sm_defs.h
 drivers/misc/vc04_services/vmcs_sm/vc_vchi_sm.h
 drivers/misc/vc04_services/vmcs_sm/vc_vchi_sm.c
+
+build
