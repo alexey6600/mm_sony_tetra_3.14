@@ -237,8 +237,7 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 #endif
 	int anon_other = 0;
 	int array_size = ARRAY_SIZE(lowmem_adj);
-	int nr_swap_pages = get_nr_swap_pages();
-	int other_free = global_page_state(NR_FREE_PAGES) - totalreserve_pages + nr_swap_pages;
+	int other_free = global_page_state(NR_FREE_PAGES) - totalreserve_pages;
 	/*
 	 * Swap cached pages are accounted as
 	 * FILE pages by the kernel. But as
