@@ -114,6 +114,9 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
 		"CmaUnevictable: %8lu kB\n"
 		"ContigAlloc:    %8lu kB\n"
 #endif
+#ifdef CONFIG_UKSM
+		"KsmZeroPages:   %8lu kB\n"
+#endif
 		,
 		K(i.totalram),
 		K(i.freeram),
@@ -182,6 +185,9 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
 		, K(global_page_state(NR_CMA_INACTIVE_FILE))
 		, K(global_page_state(NR_CMA_UNEVICTABLE))
 		, K(global_page_state(NR_CMA_CONTIG_PAGES))
+#endif
+#ifdef CONFIG_UKSM
+		, K(global_page_state(NR_UKSM_ZERO_PAGES))
 #endif
 		);
 
