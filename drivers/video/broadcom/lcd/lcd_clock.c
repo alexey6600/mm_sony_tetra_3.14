@@ -55,6 +55,8 @@ struct
 };
 #endif
 
+static int g_clks_enabled = 0;
+
 int brcm_enable_smi_lcd_clocks(struct pi_mgr_dfs_node *dfs_node)
 {
 #ifndef CONFIG_MACH_BCM_FPGA
@@ -202,6 +204,8 @@ static int en_disp_clks(void)
 		pr_err("Error while enabling pll ch\n");
 		return err;
 	}
+	g_clks_enabled = 1;
+
 	return 0;
 }
 subsys_initcall(en_disp_clks);
@@ -213,8 +217,10 @@ static int dis_disp_clks(void)
 	struct clk *dsi_pll;
 	struct clk *dsi_pll_ch;
 
-	if (!g_display_enabled)
+	if (!g_clks_enabled) {
+		pr_err("Error while disabling clocks: not enabled\n");
 		return -1;
+	}
 
 	pr_err("Disabling display clocks\n");
 	dsi_axi	= clk_get(NULL, dsi_bus_clk[0].dsi_axi);
@@ -230,6 +236,7 @@ static int dis_disp_clks(void)
 	clk_disable(dsi_pll_ch);
 
 	g_display_enabled = 0;
+	g_clks_enabled = 0;
 	return 0;
 }
 late_initcall(dis_disp_clks);
