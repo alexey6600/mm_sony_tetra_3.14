@@ -1934,7 +1934,7 @@ static int __init lcd_panel_setup(char *panel)
 	if (panel && strlen(panel)) {
 		pr_err("bootloader has initialised %s\n", panel);
 		strcpy(g_disp_str, panel);
-		g_display_enabled = 0;
+		g_display_enabled = 1;
 	}
 	return 1;
 }
