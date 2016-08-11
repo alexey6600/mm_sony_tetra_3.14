@@ -1667,6 +1667,22 @@ static int kona_fb_ioctl(struct fb_info *info, unsigned int cmd,
 	return ret;
 }
 
+static int update_screen_with_buff0(struct kona_fb *fb)
+{
+	int ret = 0;
+	DISPDRV_WIN_t p_win;
+	p_win.l = 0;
+	p_win.r = fb->display_info->width - 1;
+	p_win.t = fb->display_info->clear_ram_row_start - 1;
+	p_win.b = fb->display_info->clear_ram_row_end - 1;
+	p_win.h = fb->display_info->clear_ram_row_end;
+	p_win.w = fb->display_info->width;
+	ret = fb->display_ops->update(fb->display_hdl, fb->buff0,
+								&p_win, NULL);
+	return ret;
+}
+
+
 static int clear_panel_ram(struct kona_fb *fb)
 {
 	int ret = 0;
@@ -2778,6 +2794,9 @@ static int __ref kona_fb_probe(struct platform_device *pdev)
 	if (!fb->display_info->vmode)
 		kona_clock_stop(fb);
 
+	/* Update Display with  LOGO */
+	(void)update_screen_with_buff0(fb);
+
 	if (need_map_switch) {
 		/* To switch to new buffer. TODO: checking frame update end */
 		usleep_range(16666, 16668);
@@ -2786,7 +2805,6 @@ static int __ref kona_fb_probe(struct platform_device *pdev)
 		kona_fb_direct_unmap(fb, framesize_alloc, direct_dma_addr);
 #endif
 	}
-
 	ret = register_framebuffer(&fb->fb);
 	if (ret) {
 		konafb_error("Framebuffer registration failed\n");
