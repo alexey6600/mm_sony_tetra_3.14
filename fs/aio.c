@@ -968,25 +968,37 @@ static ssize_t aio_setup_vectored_rw(int rw, struct kiocb *kiocb, bool compat)
 	if (ret < 0)
 		return ret;
 
-	/* ki_nbytes now reflect bytes instead of segs */
+	ret = rw_verify_area(rw, kiocb->ki_filp, &kiocb->ki_pos, ret);
+	if (ret < 0)
+		return ret;
+
+	kiocb->ki_nr_segs = kiocb->ki_nbytes;
+	kiocb->ki_cur_seg = 0;
+	/* ki_nbytes/left now reflect bytes instead of segs */
 	kiocb->ki_nbytes = ret;
-	return 0;
+	kiocb->ki_left = ret;
+	return ret;
 }
 
-static ssize_t aio_setup_single_vector(int rw, struct kiocb *kiocb)
+static ssize_t aio_setup_single_vector(int type, struct file * file, struct kiocb *kiocb)
 {
-	size_t len = kiocb->ki_nbytes;
+	int bytes;
 
-	if (len > MAX_RW_COUNT)
-		len = MAX_RW_COUNT;
+	bytes = rw_verify_area(type, file, &kiocb->ki_pos, kiocb->ki_left);
+	if (bytes < 0)
+		return bytes;
 
-	if (unlikely(!access_ok(!rw, kiocb->ki_buf, len)))
+	if (bytes > MAX_RW_COUNT)
+		bytes = MAX_RW_COUNT;
+
+	if (unlikely(!access_ok(!type, kiocb->ki_buf, bytes)))
                 return -EFAULT;
 
 	kiocb->ki_iovec = &kiocb->ki_inline_vec;
 	kiocb->ki_iovec->iov_base = kiocb->ki_buf;
-	kiocb->ki_iovec->iov_len = len;
+	kiocb->ki_iovec->iov_len = bytes;
 	kiocb->ki_nr_segs = 1;
+	kiocb->ki_cur_seg = 0;
 	return 0;
 }
 
@@ -1027,7 +1039,7 @@ rw_common:
 		ret = (req->ki_opcode == IOCB_CMD_PREADV ||
 		       req->ki_opcode == IOCB_CMD_PWRITEV)
 			? aio_setup_vectored_rw(rw, req, compat)
-			: aio_setup_single_vector(rw, req);
+		  : aio_setup_single_vector(rw, file, req);
 		if (ret)
 			return ret;
 
