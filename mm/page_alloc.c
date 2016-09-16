@@ -6270,6 +6270,9 @@ static const struct trace_print_flags pageflag_names[] = {
 #ifdef CONFIG_CMA
 	{1UL << PG_cma,			"cma"		},
 #endif
+#ifdef CONFIG_KSM_CHECK_PAGE
+	{1UL << PG_ksm_scan0,           "PG_ksm_scan0"  },
+#endif
 };
 
 static void dump_page_flags(unsigned long flags)
