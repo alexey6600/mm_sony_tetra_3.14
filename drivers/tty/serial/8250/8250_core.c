@@ -1709,7 +1709,7 @@ int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
 	if (status & (UART_LSR_DR | UART_LSR_BI))
 		status = serial8250_rx_chars(up, status);
 	serial8250_modem_status(up);
-	if (status & UART_LSR_THRE)
+	if (!up->dma && (status & UART_LSR_THRE))
 		serial8250_tx_chars(up);
 
 #endif
