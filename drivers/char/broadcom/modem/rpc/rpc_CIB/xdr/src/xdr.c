@@ -724,7 +724,7 @@ xdr_union(XDR *xdrs,
 bool_t xdr_string(XDR *xdrs, char **cpp, u_int maxsize)
 {
 	char *sp;		/* sp is the actual string pointer */
-	u_int size;
+	u_int size = 0;
 	u_int nodesize;
 
 	_DIAGASSERT(xdrs != NULL);
