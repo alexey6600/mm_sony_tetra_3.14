@@ -45,7 +45,7 @@
 #include <mach/timer.h>
 #include <mach/profile_timer.h>
 #ifdef CONFIG_HAWAII_L2X0_PREFETCH
-#include <mach/cache-l2x0.h>
+#include <asm/hardware/cache-l2x0.h>
 #endif
 #include <mach/cpu.h>
 #include <plat/scu.h>
