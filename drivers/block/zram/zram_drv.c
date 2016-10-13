@@ -417,6 +417,7 @@ static ssize_t orig_data_size_show(struct device *dev,
 		(u64)(atomic64_read(&zram->stats.pages_stored)) << PAGE_SHIFT);
 }
 
+#ifdef CONFIG_ZSM
 static ssize_t zsm_saved_show(struct device *dev,
                 struct device_attribute *attr, char *buf)
 {
@@ -425,6 +426,7 @@ static ssize_t zsm_saved_show(struct device *dev,
         return scnprintf(buf, PAGE_SIZE, "%llu\n",
                 (u64)(atomic64_read(&zram->stats.zsm_saved)));
 }
+#endif
 
 static ssize_t mem_used_total_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -1388,7 +1390,9 @@ static DEVICE_ATTR(max_comp_streams, S_IRUGO | S_IWUSR,
 		max_comp_streams_show, max_comp_streams_store);
 static DEVICE_ATTR(comp_algorithm, S_IRUGO | S_IWUSR,
 		comp_algorithm_show, comp_algorithm_store);
+#ifdef CONFIG_ZSM
 static DEVICE_ATTR(zsm_saved, S_IRUGO, zsm_saved_show, NULL);
+#endif
 
 ZRAM_ATTR_RO(num_reads);
 ZRAM_ATTR_RO(num_writes);
@@ -1417,7 +1421,9 @@ static struct attribute *zram_disk_attrs[] = {
 	&dev_attr_mem_used_max.attr,
 	&dev_attr_max_comp_streams.attr,
 	&dev_attr_comp_algorithm.attr,
+#ifdef CONFIG_ZSM
 	&dev_attr_zsm_saved.attr,
+#endif
 	NULL,
 };
 
