@@ -426,6 +426,15 @@ static ssize_t zsm_saved_show(struct device *dev,
         return scnprintf(buf, PAGE_SIZE, "%llu\n",
                 (u64)(atomic64_read(&zram->stats.zsm_saved)));
 }
+
+static ssize_t zsm_saved4k_show(struct device *dev,
+                struct device_attribute *attr, char *buf)
+{
+        struct zram *zram = dev_to_zram(dev);
+
+        return scnprintf(buf, PAGE_SIZE, "%llu\n",
+                (u64)(atomic64_read(&zram->stats.zsm_saved4k)));
+}
 #endif
 
 static ssize_t mem_used_total_show(struct device *dev,
@@ -1392,6 +1401,7 @@ static DEVICE_ATTR(comp_algorithm, S_IRUGO | S_IWUSR,
 		comp_algorithm_show, comp_algorithm_store);
 #ifdef CONFIG_ZSM
 static DEVICE_ATTR(zsm_saved, S_IRUGO, zsm_saved_show, NULL);
+static DEVICE_ATTR(zsm_saved4k, S_IRUGO, zsm_saved4k_show, NULL);
 #endif
 
 ZRAM_ATTR_RO(num_reads);
@@ -1423,6 +1433,7 @@ static struct attribute *zram_disk_attrs[] = {
 	&dev_attr_comp_algorithm.attr,
 #ifdef CONFIG_ZSM
 	&dev_attr_zsm_saved.attr,
+	&dev_attr_zsm_saved4k.attr,
 #endif
 	NULL,
 };
