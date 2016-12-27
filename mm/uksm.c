@@ -542,7 +542,7 @@ struct uksm_cpu_preset_s uksm_cpu_preset[4] = {
 /* Time per page can vary widely; ema seems to respond much better to the
  * bounded range offered by pages per usec.
  */
-#define UKSM_PAGE_COUNT_DEFAULT	250
+#define UKSM_PAGE_COUNT_DEFAULT	128
 /* Based on task runtime */
 static unsigned long uksm_ema_task_pages = UKSM_PAGE_COUNT_DEFAULT;
 /* Based on wall time */
