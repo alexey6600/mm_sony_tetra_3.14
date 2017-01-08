@@ -2514,7 +2514,7 @@ static int __init ksm_init(void)
 		goto out_free;
 	}
 #else
-	ksm_run = KSM_RUN_STOP;		/* no way for user to start it */
+	ksm_run = KSM_RUN_MERGE;	/* no way for user to start it */
 
 #endif /* CONFIG_SYSFS */
 
