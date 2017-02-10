@@ -967,13 +967,6 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
 
 	req->length = length;
 
-	/* throttle high/super speed IRQ rate back slightly */
-	if (gadget_is_dualspeed(dev->gadget))
-		req->no_interrupt = (dev->gadget->speed == USB_SPEED_HIGH ||
-				     dev->gadget->speed == USB_SPEED_SUPER)
-			? ((atomic_read(&dev->tx_qlen) % qmult) != 0)
-			: 0;
-
 	req->dma = 0;
 
 #ifdef CONFIG_USB_ETH_SKB_ALLOC_OPTIMIZATION
