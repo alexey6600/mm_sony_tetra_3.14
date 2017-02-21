@@ -113,6 +113,22 @@ size of the disk when not in use so a huge zram is wasteful.
 		mem_used_total
 		mem_used_max
 
+WARNING
+=======
+per-stat sysfs attributes are considered to be deprecated.
+The basic strategy is:
+-- the existing RW nodes will be downgraded to WO nodes (in linux 4.11)
+-- deprecated RO sysfs nodes will eventually be removed (in linux 4.11)
+
+The list of deprecated attributes can be found here:
+Documentation/ABI/obsolete/sysfs-block-zram
+
+Basically, every attribute that has its own read accessible sysfs node
+(e.g. num_reads) *AND* is accessible via one of the stat files (zram<id>/stat
+or zram<id>/io_stat or zram<id>/mm_stat) is considered to be deprecated.
+
+User space is advised to use the following files to read the device statistics.
+
 File /sys/block/zram<id>/io_stat
 
 The stat file represents device's I/O statistics not accounted by block
