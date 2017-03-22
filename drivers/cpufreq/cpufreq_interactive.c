@@ -44,7 +44,6 @@ struct cpufreq_interactive_cpuinfo {
 	u64 time_in_idle_timestamp;
 	u64 cputime_speedadj;
 	u64 cputime_speedadj_timestamp;
-	u64 last_evaluated_jiffy;
 	struct cpufreq_policy *policy;
 	struct cpufreq_frequency_table *freq_table;
 	spinlock_t target_freq_lock; /*protects target freq */
@@ -118,7 +117,7 @@ struct cpufreq_interactive_tunables {
 };
 
 /* For cases where we have single governor instance for system */
-static struct cpufreq_interactive_tunables *common_tunables;
+struct cpufreq_interactive_tunables *common_tunables;
 
 static struct attribute_group *get_sysfs_attr(void);
 
@@ -160,22 +159,12 @@ static inline cputime64_t get_cpu_idle_time(
 	return idle_time;
 }
 
-/* Round to starting jiffy of next evaluation window */
-static u64 round_to_nw_start(u64 jif,
-			     struct cpufreq_interactive_tunables *tunables)
-{
-	unsigned long step = usecs_to_jiffies(tunables->timer_rate);
-
-	do_div(jif, step);
-	return (jif + 1) * step;
-}
-
 static void cpufreq_interactive_timer_resched(
 	struct cpufreq_interactive_cpuinfo *pcpu)
 {
 	struct cpufreq_interactive_tunables *tunables =
 		pcpu->policy->governor_data;
-	u64 expires;
+	unsigned long expires;
 	unsigned long flags;
 
 	spin_lock_irqsave(&pcpu->load_lock, flags);
@@ -185,7 +174,7 @@ static void cpufreq_interactive_timer_resched(
 				  tunables->io_is_busy);
 	pcpu->cputime_speedadj = 0;
 	pcpu->cputime_speedadj_timestamp = pcpu->time_in_idle_timestamp;
-	expires = round_to_nw_start(pcpu->last_evaluated_jiffy, tunables);
+	expires = jiffies + usecs_to_jiffies(tunables->timer_rate);
 	mod_timer_pinned(&pcpu->cpu_timer, expires);
 
 	if (tunables->timer_slack_val >= 0 &&
@@ -205,7 +194,8 @@ static void cpufreq_interactive_timer_start(
 	struct cpufreq_interactive_tunables *tunables, int cpu)
 {
 	struct cpufreq_interactive_cpuinfo *pcpu = &per_cpu(cpuinfo, cpu);
-	u64 expires = round_to_nw_start(pcpu->last_evaluated_jiffy, tunables);
+	unsigned long expires = jiffies +
+		usecs_to_jiffies(tunables->timer_rate);
 	unsigned long flags;
 
 	pcpu->cpu_timer.expires = expires;
@@ -405,10 +395,9 @@ static void cpufreq_interactive_timer(unsigned long data)
 	now = update_load(data);
 	delta_time = (unsigned int)(now - pcpu->cputime_speedadj_timestamp);
 	cputime_speedadj = pcpu->cputime_speedadj;
-	pcpu->last_evaluated_jiffy = get_jiffies_64();
 	spin_unlock_irqrestore(&pcpu->load_lock, flags);
 
-	if (!delta_time)
+	if (WARN_ON_ONCE(!delta_time))
 		goto rearm;
 
 	spin_lock_irqsave(&pcpu->target_freq_lock, flags);
@@ -483,8 +472,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 		pcpu->floor_validate_time = now;
 	}
 
-	if (pcpu->target_freq == new_freq &&
-			pcpu->target_freq <= pcpu->policy->cur) {
+	if (pcpu->target_freq == new_freq) {
 		trace_cpufreq_interactive_already(
 			data, cpu_load, pcpu->target_freq,
 			pcpu->policy->cur, new_freq);
@@ -543,10 +531,8 @@ static void cpufreq_interactive_idle_start(void)
 		 * min indefinitely.  This should probably be a quirk of
 		 * the CPUFreq driver.
 		 */
-		if (!pending) {
-			pcpu->last_evaluated_jiffy = get_jiffies_64();
+		if (!pending)
 			cpufreq_interactive_timer_resched(pcpu);
-		}
 	}
 
 	up_read(&pcpu->enable_sem);
@@ -914,18 +900,12 @@ static ssize_t store_timer_rate(struct cpufreq_interactive_tunables *tunables,
 		const char *buf, size_t count)
 {
 	int ret;
-	unsigned long val, val_round;
+	unsigned long val;
 
 	ret = strict_strtoul(buf, 0, &val);
 	if (ret < 0)
 		return ret;
-
-	val_round = jiffies_to_usecs(usecs_to_jiffies(val));
-	if (val != val_round)
-		pr_warn("timer_rate not aligned to jiffy. Rounded up to %lu\n",
-			val_round);
-
-	tunables->timer_rate = val_round;
+	tunables->timer_rate = val;
 	return count;
 }
 
@@ -1289,7 +1269,6 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 			down_write(&pcpu->enable_sem);
 			del_timer_sync(&pcpu->cpu_timer);
 			del_timer_sync(&pcpu->cpu_slack_timer);
-			pcpu->last_evaluated_jiffy = get_jiffies_64();
 			cpufreq_interactive_timer_start(tunables, j);
 			pcpu->governor_enabled = 1;
 			up_write(&pcpu->enable_sem);
