@@ -107,7 +107,6 @@ extern int ext4_xattr_set(struct inode *, int, const char *, const void *, size_
 extern int ext4_xattr_set_handle(handle_t *, struct inode *, int, const char *, const void *, size_t, int);
 
 extern void ext4_xattr_delete_inode(handle_t *, struct inode *);
-extern void ext4_xattr_put_super(struct super_block *);
 
 extern int ext4_expand_extra_isize_ea(struct inode *inode, int new_extra_isize,
 			    struct ext4_inode *raw_inode, handle_t *handle);
