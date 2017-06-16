@@ -96,7 +96,7 @@
 
 #define SUSPEND_LINK_DELAY_MS 100
 
-static bool enable_corners = true;
+static bool enable_corners = false;
 
 static struct pi_mgr_qos_node g_mm_qos_node;
 
